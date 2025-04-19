@@ -1,25 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const Diary = require('../models/Diary'); // Diary 모델 불러오기
+const Diary = require('../models/Diary');
 
 // [POST] 새로운 일기 작성
 router.post('/', async (req, res) => {
-	const { type, content, createdAt } = req.body;
-	try {
-		// 요청에 createdAt이 있으면 그대로 쓰고, 없으면 기본값 사용
-		const payload = { type, content };
-		if (createdAt) payload.createdAt = new Date(createdAt);
-		
-		const newDiary = new Diary(payload);
-		await newDiary.save();
-		res.status(201).json({ diary: newDiary });
-	} catch (error) {
-		res.status(500).json({ message: '서버 오류', error });
-	}
+  const { type, title, content, createdAt } = req.body;
+  console.log('POST /diaries payload:', req.body); // 디버깅용 로그
+
+  try {
+    const payload = { type, title, content };
+    if (createdAt) {
+      const parsed = new Date(createdAt);
+      if (!isNaN(parsed)) {
+        payload.createdAt = parsed;
+      }
+    }
+
+    const newDiary = new Diary(payload);
+    await newDiary.save();
+    res.status(201).json({ diary: newDiary });
+  } catch (error) {
+    console.error('Error saving diary:', error.message);
+    res.status(500).json({ message: '서버 오류', error });
+  }
 });
 
-
-// [GET] 일기 조회 (모든 일기를 최신순으로 정렬)
+// [GET] 일기 전체 조회
 router.get('/', async (req, res) => {
   try {
     const diaries = await Diary.find().sort({ createdAt: -1 });
@@ -29,14 +35,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-// [PUT] 일기 수정 : URL 예) /diaries/:id
+// [PUT] 일기 수정
 router.put('/:id', async (req, res) => {
   const diaryId = req.params.id;
-  const { type, content } = req.body;
+  const { title, content } = req.body;
+
   try {
     const updatedDiary = await Diary.findByIdAndUpdate(
       diaryId,
-      { type, content },
+      { title, content },
       { new: true }
     );
     if (!updatedDiary) {
@@ -44,11 +51,12 @@ router.put('/:id', async (req, res) => {
     }
     res.json({ message: '일기 수정 완료!', diary: updatedDiary });
   } catch (error) {
+    console.error('Error updating diary:', error.message);
     res.status(500).json({ message: '서버 오류', error });
   }
 });
 
-// [DELETE] 일기 삭제 : URL 예) /diaries/:id
+// [DELETE] 일기 삭제
 router.delete('/:id', async (req, res) => {
   const diaryId = req.params.id;
   try {
