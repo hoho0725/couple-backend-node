@@ -26,20 +26,23 @@ router.get('/random', async (req, res) => {
 });
 
 // [GET] 순차 추억 여러 개 (최신순 or 오래된 순)
+// [GET] 순차 추억 여러 개 (최신순 or 오래된 순)
 router.get('/', async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = parseInt(req.query.skip) || 0;
 
   try {
-    const memories = await Memory.find()
-      .sort({ _id: -1 })  // 최신순: -1 / 오래된순: 1
-      .skip(skip)
-      .limit(limit);
-    res.json({ memories });
+    const [memories, total] = await Promise.all([
+      Memory.find().sort({ _id: -1 }).skip(skip).limit(limit),
+      Memory.countDocuments() // 전체 개수도 함께 조회!
+    ]);
+
+    res.json({ memories, total }); // 프론트에서 total 사용 가능!
   } catch (err) {
     res.status(500).json({ message: '추억 불러오기 실패', error: err });
   }
 });
+
 
 // [PUT] 추억 수정
 router.put('/:id', async (req, res) => {
