@@ -15,6 +15,7 @@ const helmet = require('helmet');
 // 2. 라우터들 불러오기
 const diaryRoutes = require('./routes/diaryRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const memoryRoutes = require('./routes/memories');
 
 // 3. Express 앱과 HTTP 서버, Socket.IO 설정
 const app = express();
@@ -39,6 +40,7 @@ app.get('/hello', (req, res) => {
 // 6. API 라우터 등록
 app.use('/diaries', diaryRoutes);
 app.use('/upload', uploadRoutes);
+app.use('/memories', memoryRoutes);
 
 // 7. Socket.IO 설정 (실시간 채팅)
 io.on('connection', (socket) => {
