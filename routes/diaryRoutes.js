@@ -5,7 +5,6 @@ const Diary = require('../models/Diary');
 // [POST] 새로운 일기 작성
 router.post('/', async (req, res) => {
   const { type, title, content, createdAt } = req.body;
-  console.log('POST /diaries payload:', req.body); // 디버깅용 로그
 
   try {
     const payload = { type, title, content };
