@@ -1,6 +1,6 @@
 // index.js
 
-// 1. 필수 모듈들을 최상단에 require
+// 필수 모듈들을 최상단에 require
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -11,14 +11,12 @@ const path = require('path');
 // index.js 최상단 모듈 불러오기 부분에 추가:
 const helmet = require('helmet');
 
-
-
-// 2. 라우터들 불러오기
+// 라우터들 불러오기
 const diaryRoutes = require('./routes/diaryRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const memoryRoutes = require('./routes/memories');
 
-// 3. Express 앱과 HTTP 서버, Socket.IO 설정
+// Express 앱과 HTTP 서버, Socket.IO 설정
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -28,23 +26,25 @@ const io = socketIo(server, {
   }
 });
 
-// 4. Middleware 설정
+// Middleware 설정
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 5. 기본 라우트 (예: 테스트용 /hello)
+// 기본 라우트 (예: 테스트용 /hello)
 app.get('/hello', (req, res) => {
   res.send('Hello from Couple Node.js Server!');
 });
 
-// 6. API 라우터 등록
+// API 라우터 등록
 app.use('/diaries', diaryRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/memories', memoryRoutes);
+
+// 업로드된 파일들을 제공하는 경로 설정
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 7. Socket.IO 설정 (실시간 채팅)
+// Socket.IO 설정 (실시간 채팅)
 io.on('connection', (socket) => {
   console.log('새 클라이언트가 연결됨:', socket.id);
 
@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// 8. MongoDB 연결 설정 (연결 성공 후 서버 시작)
+// MongoDB 연결 설정 (연결 성공 후 서버 시작)
 const mongoUri = process.env.MONGO_URI || 'mongodb+srv://chs3112a:chs040201!@cluster0.niznsxw.mongodb.net/couple_db?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
@@ -68,7 +68,7 @@ mongoose.connect(mongoUri, {
   .then(() => {
     console.log('MongoDB에 연결 성공!');
 
-    // 9. DB 연결 후 서버 실행 (포트 3000 또는 환경변수 PORT 사용)
+    // DB 연결 후 서버 실행 (포트 3000 또는 환경변수 PORT 사용)
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
       console.log(`서버가 ${PORT}번 포트에서 실행 중...`);
