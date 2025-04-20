@@ -6,6 +6,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
 
 // index.js 최상단 모듈 불러오기 부분에 추가:
 const helmet = require('helmet');
@@ -16,7 +17,6 @@ const helmet = require('helmet');
 const diaryRoutes = require('./routes/diaryRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const memoryRoutes = require('./routes/memories');
-const uploadRoutes = require('./routes/uploadRoutes');
 
 // 3. Express 앱과 HTTP 서버, Socket.IO 설정
 const app = express();
