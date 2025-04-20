@@ -11,8 +11,8 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // 현재 시간과 원본 파일 이름을 합쳐서 저장 (예: 1681403200000-original.pdf)
-    const encodedFileName = encodeURIComponent(file.originalname);
-    cb(null, Date.now() + '-' + encodedFileName);
+    const encodedFileName = encodeURIComponent(file.originalname); // 파일 이름을 URL 인코딩
+    cb(null, Date.now() + '-' + encodedFileName); // 날짜와 인코딩된 파일 이름을 합쳐서 저장
   }
 });
 
@@ -37,7 +37,7 @@ router.get('/files', (req, res) => {
     if (err) {
       return res.status(500).json({ message: '파일 목록을 가져오는 데 실패했습니다.' });
     }
-    
+
     // 파일 이름에서 날짜 부분을 제거하고 순수 파일 이름만 추출
     const cleanFiles = files.map((file) => {
       const fileNameWithoutTimestamp = file.split('-').slice(1).join('-'); // 날짜 부분 제거
