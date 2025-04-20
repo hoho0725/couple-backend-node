@@ -1,28 +1,93 @@
-// routes/uploadRoutes.js
+// index.js
+
+// 필수 모듈들을 최상단에 require
 const express = require('express');
-const router = express.Router();
-const multer  = require('multer');
+const http = require('http');
+const socketIo = require('socket.io');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const path = require('path');
 
-// 로컬 저장용 파일 시스템 설정 (테스트용)
-// 운영 시에는 AWS S3 같은 외부 스토리지 사용 권장
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');  // 'uploads' 폴더에 파일 저장
-  },
-  filename: function (req, file, cb) {
-    // 현재 시간과 원본 파일 이름을 합쳐서 저장 (예: 1681403200000-original.jpg)
-    cb(null, Date.now() + '-' + file.originalname);
+// index.js 최상단 모듈 불러오기 부분에 추가:
+const helmet = require('helmet');
+
+// 라우터들 불러오기
+const diaryRoutes = require('./routes/diaryRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const memoryRoutes = require('./routes/memories');
+
+// Express 앱과 HTTP 서버, Socket.IO 설정
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*", // 모든 출처 허용 (테스트 단계에서는 이렇게 설정, 보안상 나중에 특정 도메인으로 제한 권장)
+    methods: ["GET", "POST"]
   }
 });
-const upload = multer({ storage: storage });
 
-// 단일 파일 업로드 엔드포인트 (폼 필드 이름은 "image")
-router.post('/', upload.single('image'), (req, res) => {
-  // 업로드가 성공하면, 파일 정보는 req.file에 담김
-  if (!req.file) {
-    return res.status(400).json({ message: '파일 업로드 실패' });
-  }
-  res.status(200).json({ message: '파일 업로드 성공!', file: req.file });
+// Middleware 설정
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 기본 라우트 (예: 테스트용 /hello)
+app.get('/hello', (req, res) => {
+  res.send('Hello from Couple Node.js Server!');
 });
 
-module.exports = router;
+// API 라우터 등록
+app.use('/diaries', diaryRoutes);
+app.use('/upload', uploadRoutes);
+app.use('/memories', memoryRoutes);
+
+// 업로드된 파일들을 제공하는 경로 설정
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Socket.IO 설정 (실시간 채팅)
+io.on('connection', (socket) => {
+  console.log('새 클라이언트가 연결됨:', socket.id);
+
+  // 채팅 메시지 이벤트 처리
+  socket.on('chat message', (msg) => {
+    console.log('메시지:', msg);
+    io.emit('chat message', msg);  // 모든 클라이언트에게 메시지 전송
+  });
+
+  socket.on('disconnect', () => {
+    console.log('클라이언트 연결 종료:', socket.id);
+  });
+});
+
+// MongoDB 연결 설정 (연결 성공 후 서버 시작)
+const mongoUri = process.env.MONGO_URI || 'mongodb+srv://chs3112a:chs040201!@cluster0.niznsxw.mongodb.net/couple_db?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(mongoUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => {
+    console.log('MongoDB에 연결 성공!');
+
+    // DB 연결 후 서버 실행 (포트 3000 또는 환경변수 PORT 사용)
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+      console.log(`서버가 ${PORT}번 포트에서 실행 중...`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB 연결 오류:', err);
+  });
+
+const axios = require('axios');
+
+// RequestBin URL
+const requestBinUrl = 'https://eoue6ir2z9uhjxr.m.pipedream.net';
+
+// 예시로 서버가 실행될 때마다 RequestBin에 GET 요청을 보내는 코드
+axios.get(requestBinUrl)
+  .then(response => {
+    console.log('RequestBin 응답:', response.data);
+  })
+  .catch(error => {
+    console.error('RequestBin 요청 실패:', error);
+  });
