@@ -1,4 +1,3 @@
-// routes/uploadRoutes.js
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -6,22 +5,21 @@ const path = require('path');
 const fs = require('fs');
 
 // 파일 시스템 설정 (모든 파일 업로드 가능)
-// 운영 시에는 AWS S3와 같은 외부 스토리지를 사용하는 것이 좋습니다.
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');  // 'uploads' 폴더에 파일 저장
   },
   filename: function (req, file, cb) {
     // 현재 시간과 원본 파일 이름을 합쳐서 저장 (예: 1681403200000-original.pdf)
-	const encodedFileName = encodeURIComponent(file.originalname);
+    const encodedFileName = encodeURIComponent(file.originalname);
     cb(null, Date.now() + '-' + encodedFileName);
   }
 });
 
 // 모든 파일 업로드를 허용하도록 multer 설정
 const upload = multer({ 
-	storage: storage,
-	limits: { fileSize: 100 * 1024 * 1024 * 1024 }
+  storage: storage,
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB로 파일 크기 제한
 });
 
 router.post('/', upload.single('file'), (req, res) => {
@@ -39,11 +37,14 @@ router.get('/files', (req, res) => {
     if (err) {
       return res.status(500).json({ message: '파일 목록을 가져오는 데 실패했습니다.' });
     }
-	const decodedFiles = files.map((file) => {
+    
+    // 파일 이름에서 날짜 부분을 제거하고 순수 파일 이름만 추출
+    const cleanFiles = files.map((file) => {
       const fileNameWithoutTimestamp = file.split('-').slice(1).join('-'); // 날짜 부분 제거
       return decodeURIComponent(fileNameWithoutTimestamp); // 디코딩 처리
     });
-    res.status(200).json({ decodedFiles });
+
+    res.status(200).json({ files: cleanFiles }); // 'decodedFiles' -> 'files'
   });
 });
 
@@ -58,9 +59,10 @@ router.get('/download/:filename', (req, res) => {
   });
 });
 
+// 파일 삭제 API
 router.delete('/:filename', (req, res) => {
   const { filename } = req.params; // URL 파라미터에서 파일 이름 받기
-  const filePath = path.join(__dirname, '../uploads', decodeURIComponent(filename));
+  const filePath = path.join(__dirname, '../uploads', decodeURIComponent(filename)); // URL 디코딩
 
   fs.unlink(filePath, (err) => {
     if (err) {
