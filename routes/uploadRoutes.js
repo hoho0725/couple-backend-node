@@ -53,13 +53,13 @@ router.get('/download/:filename', (req, res) => {
   });
 });
 
-router.delete('/delete/:filename', (req, res) => {
-  const fileName = req.params.filename;
-  const filePath = path.join(__dirname, '../uploads', fileName);
+router.delete('/:filename', (req, res) => {
+  const { filename } = req.params; // URL 파라미터에서 파일 이름 받기
+  const filePath = path.join(__dirname, '../uploads', filename);
 
-  // 파일 삭제
   fs.unlink(filePath, (err) => {
     if (err) {
+      console.error('파일 삭제 실패:', err);
       return res.status(500).json({ message: '파일 삭제 실패' });
     }
     res.status(200).json({ message: '파일 삭제 성공' });
