@@ -21,6 +21,7 @@ const upload = multer({ storage: storage });
 
 router.post('/', upload.single('file'), (req, res) => {
   // 업로드가 성공하면, 파일 정보는 req.file에 담김
+  console.log('업로드된 파일:', req.file); // 파일 정보 로그 찍기
   if (!req.file) {
     return res.status(400).json({ message: '파일 업로드 실패' });
   }
