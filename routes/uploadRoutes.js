@@ -13,7 +13,8 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     // 현재 시간과 원본 파일 이름을 합쳐서 저장 (예: 1681403200000-original.pdf)
-    cb(null, Date.now() + '-' + file.originalname);
+	const encodedFileName = encodeURIComponent(file.originalname);
+    cb(null, Date.now() + '-' + encodedFileName);
   }
 });
 
@@ -38,13 +39,17 @@ router.get('/files', (req, res) => {
     if (err) {
       return res.status(500).json({ message: '파일 목록을 가져오는 데 실패했습니다.' });
     }
-    res.status(200).json({ files });
+	const decodedFiles = files.map((file) => {
+      const fileNameWithoutTimestamp = file.split('-').slice(1).join('-'); // 날짜 부분 제거
+      return decodeURIComponent(fileNameWithoutTimestamp); // 디코딩 처리
+    });
+    res.status(200).json({ decodedFiles });
   });
 });
 
 // 파일 다운로드 API
 router.get('/download/:filename', (req, res) => {
-  const fileName = req.params.filename;
+  const fileName = decodeURIComponent(req.params.filename); // URL 디코딩
   const filePath = path.join(__dirname, '../uploads', fileName);
   res.download(filePath, fileName, (err) => {
     if (err) {
@@ -55,7 +60,7 @@ router.get('/download/:filename', (req, res) => {
 
 router.delete('/:filename', (req, res) => {
   const { filename } = req.params; // URL 파라미터에서 파일 이름 받기
-  const filePath = path.join(__dirname, '../uploads', filename);
+  const filePath = path.join(__dirname, '../uploads', decodeURIComponent(filename));
 
   fs.unlink(filePath, (err) => {
     if (err) {
