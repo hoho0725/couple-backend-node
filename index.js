@@ -16,6 +16,7 @@ const helmet = require('helmet');
 const diaryRoutes = require('./routes/diaryRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const memoryRoutes = require('./routes/memories');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // 3. Express 앱과 HTTP 서버, Socket.IO 설정
 const app = express();
@@ -41,6 +42,7 @@ app.get('/hello', (req, res) => {
 app.use('/diaries', diaryRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/memories', memoryRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 7. Socket.IO 설정 (실시간 채팅)
 io.on('connection', (socket) => {
