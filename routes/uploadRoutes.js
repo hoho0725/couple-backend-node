@@ -10,9 +10,8 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');  // 'uploads' 폴더에 파일 저장
   },
   filename: function (req, file, cb) {
-    // 파일 이름을 인코딩하여 저장
-    const encodedFileName = encodeURIComponent(file.originalname); 
-    cb(null, Date.now() + '-' + encodedFileName);
+    // 서버에 저장할 때, 파일 이름을 그대로 사용
+    cb(null, Date.now() + '-' + file.originalname);  // 파일 이름에 날짜 추가
   }
 });
 
@@ -39,11 +38,10 @@ router.get('/files', (req, res) => {
     }
 
     const result = files.map((storedName) => {
-      const originalPart = storedName.split('-').slice(1).join('-'); // 시간 부분 제거
-      const decoded = decodeURIComponent(originalPart); // 디코딩 처리
+      const originalPart = storedName.split('-').slice(1).join('-'); // 날짜 부분 제거
       return {
         storedName,     // 실제 서버에 저장된 이름
-        originalName: decoded  // 클라이언트에 보여줄 이름
+        originalName: originalPart  // 클라이언트에 보여줄 이름 (디코딩 없이 그대로 사용)
       };
     });
 
@@ -53,7 +51,7 @@ router.get('/files', (req, res) => {
 
 // 파일 다운로드 API
 router.get('/download/:filename', (req, res) => {
-  const fileName = decodeURIComponent(req.params.filename); // URL 디코딩
+  const fileName = req.params.filename; // URL 디코딩 없이 파일 이름 사용
   const filePath = path.join(__dirname, '../uploads', fileName);
   res.download(filePath, fileName, (err) => {
     if (err) {
@@ -65,7 +63,7 @@ router.get('/download/:filename', (req, res) => {
 // 파일 삭제 API
 router.delete('/:filename', (req, res) => {
   const { filename } = req.params;
-  const filePath = path.join(__dirname, '../uploads', decodeURIComponent(filename));
+  const filePath = path.join(__dirname, '../uploads', filename);
 
   fs.unlink(filePath, (err) => {
     if (err) {
