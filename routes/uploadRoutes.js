@@ -18,7 +18,10 @@ const storage = multer.diskStorage({
 });
 
 // 모든 파일 업로드를 허용하도록 multer 설정
-const upload = multer({ storage: storage });
+const upload = multer({ 
+	storage: storage,
+	limits: { fileSize: 100 * 1024 * 1024 * 1024 }
+});
 
 router.post('/', upload.single('file'), (req, res) => {
   // 업로드가 성공하면, 파일 정보는 req.file에 담김
@@ -47,6 +50,19 @@ router.get('/download/:filename', (req, res) => {
     if (err) {
       return res.status(500).json({ message: '파일 다운로드 실패' });
     }
+  });
+});
+
+router.delete('/delete/:filename', (req, res) => {
+  const fileName = req.params.filename;
+  const filePath = path.join(__dirname, '../uploads', fileName);
+
+  // 파일 삭제
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      return res.status(500).json({ message: '파일 삭제 실패' });
+    }
+    res.status(200).json({ message: '파일 삭제 성공' });
   });
 });
 
