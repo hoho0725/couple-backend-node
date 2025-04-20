@@ -5,18 +5,18 @@ const path = require('path');
 const fs = require('fs');
 
 // 파일 시스템 설정 (모든 파일 업로드 가능)
-// 운영 시에는 AWS S3와 같은 외부 스토리지를 사용하는 것이 좋습니다.
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');  // 'uploads' 폴더에 파일 저장
   },
   filename: function (req, file, cb) {
-    const encodedFileName = encodeURIComponent(file.originalname);
+    // 파일 이름을 인코딩하여 저장
+    const encodedFileName = encodeURIComponent(file.originalname); 
     cb(null, Date.now() + '-' + encodedFileName);
   }
 });
 
-// 모든 파일 업로드를 허용하도록 multer 설정
+// 파일 업로드 설정
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 100 * 1024 * 1024 * 1024 }
@@ -39,8 +39,8 @@ router.get('/files', (req, res) => {
     }
 
     const result = files.map((storedName) => {
-      const originalPart = storedName.split('-').slice(1).join('-'); // 시간 제거
-      const decoded = decodeURIComponent(originalPart);
+      const originalPart = storedName.split('-').slice(1).join('-'); // 시간 부분 제거
+      const decoded = decodeURIComponent(originalPart); // 디코딩 처리
       return {
         storedName,     // 실제 서버에 저장된 이름
         originalName: decoded  // 클라이언트에 보여줄 이름
