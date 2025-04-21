@@ -29,7 +29,6 @@ router.post('/', upload.single('file'), async (req, res) => {
     Bucket: 'memories-box',  // S3 버킷 이름
     Key: fileName,           // S3에 저장될 파일 이름
     Body: req.file.buffer,   // 업로드할 파일 내용
-    ACL: 'public-read',      // 공개 읽기 권한
     ContentType: req.file.mimetype  // 파일 MIME 타입 설정
   };
 
@@ -52,6 +51,11 @@ router.get('/files', async (req, res) => {
   try {
     // S3에서 파일 목록 가져오기
     const data = await s3.send(new ListObjectsV2Command(params));
+    
+    if (!data.Contents) {
+      return res.status(200).json({ files: [] });  // 파일이 없다면 빈 배열 반환
+    }
+
     const result = data.Contents.map((file) => {
       const originalName = file.Key.split('-').slice(1).join('-');  // 파일 이름에서 날짜 부분 제거
       return {
