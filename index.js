@@ -28,6 +28,7 @@ const io = socketIo(server, {
 
 // Middleware 설정
 app.use(cors());
+app.use(helmet());  // 보안 헤더 추가
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -60,11 +61,9 @@ io.on('connection', (socket) => {
 });
 
 // MongoDB 연결 설정 (연결 성공 후 서버 시작)
+// 'useNewUrlParser'와 'useUnifiedTopology' 옵션은 더 이상 필요 없음
 const mongoUri = process.env.MONGO_URI || 'mongodb+srv://chs3112a:chs040201!@cluster0.niznsxw.mongodb.net/couple_db?retryWrites=true&w=majority&appName=Cluster0';
-mongoose.connect(mongoUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(mongoUri)
   .then(() => {
     console.log('MongoDB에 연결 성공!');
 
