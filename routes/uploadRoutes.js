@@ -48,6 +48,15 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 });
 
+upload.single('file'), (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: '파일 크기가 너무 큽니다. 10MB 이하의 파일만 업로드 가능합니다.' });
+    }
+  }
+  next(err);  // 다른 오류 처리
+}
+
 // 파일 목록 반환 API (S3에서 파일 목록 가져오기)
 router.get('/files', async (req, res) => {
   const params = {
