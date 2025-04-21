@@ -4,7 +4,6 @@ const router = express.Router();
 const multer = require('multer');
 const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');  // 필요한 AWS SDK 명령어 불러오기
 
-
 // AWS S3 설정 (v3)
 const s3 = new S3Client({
   region: process.env.AWS_REGION || 'ap-northeast-2', // 자신의 S3 버킷이 위치한 리전으로 설정
@@ -16,18 +15,17 @@ const s3 = new S3Client({
 
 // Multer 메모리 스토리지 설정 (파일을 메모리에 저장)
 const storage = multer.memoryStorage();
-const upload = multer({ 
-	storage: storage,
-
+const upload = multer({
+  storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024  // 10MB
+    fileSize: 10 * 1024 * 1024  // 10MB로 파일 크기 제한
   }
 });
 
 // 파일 업로드 API (S3에 파일 업로드)
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ message: '파일 업로드 실패' });
+    return res.status(400).json({ message: '파일 업로드 실패, 파일이 없습니다' });
   }
 
   const fileName = Date.now().toString() + '-' + req.file.originalname;
@@ -48,14 +46,15 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 });
 
-upload.single('file'), (err, req, res, next) => {
+// Multer 파일 크기 초과 시 오류 처리
+router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: '파일 크기가 너무 큽니다. 10MB 이하의 파일만 업로드 가능합니다.' });
     }
   }
   next(err);  // 다른 오류 처리
-}
+});
 
 // 파일 목록 반환 API (S3에서 파일 목록 가져오기)
 router.get('/files', async (req, res) => {
