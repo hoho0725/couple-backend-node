@@ -16,7 +16,13 @@ const s3 = new S3Client({
 
 // Multer 메모리 스토리지 설정 (파일을 메모리에 저장)
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ 
+	storage: storage,
+
+  limits: {
+    fileSize: 10 * 1024 * 1024  // 10MB
+  }
+});
 
 // 파일 업로드 API (S3에 파일 업로드)
 router.post('/', upload.single('file'), async (req, res) => {
