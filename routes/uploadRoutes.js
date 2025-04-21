@@ -1,12 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');  // 필요한 AWS SDK 명령어 불러오기
-require('dotenv').config();
+
 
 // AWS S3 설정 (v3)
 const s3 = new S3Client({
-  region: process.env.AWS_REGION, // 자신의 S3 버킷이 위치한 리전으로 설정
+  region: process.env.AWS_REGION || 'ap-northeast-2', // 자신의 S3 버킷이 위치한 리전으로 설정
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
