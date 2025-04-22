@@ -13,11 +13,16 @@ const s3 = new S3Client({
   }
 });
 
-// ✅ Presigned URL 생성 API (프론트가 이 URL로 직접 업로드함)
+// ✅ Presigned URL 생성 API (프론트가 이 UR
 router.get('/presigned-url', async (req, res) => {
   const { filename, filetype } = req.query;
 
+  console.log('🟢 Presigned URL 요청 도착');
+  console.log('📎 filename:', filename);
+  console.log('📎 filetype:', filetype);
+
   if (!filename || !filetype) {
+    console.warn('❗ filename 또는 filetype 누락');
     return res.status(400).json({ message: 'filename과 filetype은 필수입니다.' });
   }
 
@@ -30,11 +35,21 @@ router.get('/presigned-url', async (req, res) => {
   });
 
   try {
-    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 }); // 60초 동안 유효
+    const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+
+    console.log('✅ presigned URL 생성 성공');
+    console.log('🔗 URL:', signedUrl);
+
     res.status(200).json({ url: signedUrl, key });
   } catch (err) {
-    console.error('Presigned URL 생성 실패:', err);
-    res.status(500).json({ message: 'Presigned URL 생성 실패', error: err });
+    console.error('❌ presigned URL 생성 실패');
+    console.error('📛 오류 메시지:', err.message);
+    console.error('📂 전체 오류 객체:', JSON.stringify(err, null, 2)); // 구조화된 로그
+    res.status(500).json({
+      message: 'Presigned URL 생성 실패',
+      error: err.message,
+      detail: err
+    });
   }
 });
 
